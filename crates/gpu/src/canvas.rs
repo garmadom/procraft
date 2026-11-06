@@ -118,7 +118,7 @@ pub struct StrokeStyle {
     /// A grain image, or none.
     pub grain: Option<u32>,
     pub grain_mode: GrainMode,
-    /// One grain tile on the canvas, pixels.
+    /// One grain tile on the , pixels.
     pub grain_scale: f32,
     pub grain_depth: f32,
     pub rendering: Rendering,
@@ -170,7 +170,7 @@ pub struct StrokeStyle {
     /// No grain filtering: the grain read pixel by pixel, sharp, as from a finer image.
     pub grain_sharp: bool,
     /// A brush file's grain to read in place of the brush images (see
-    /// [`Canvas::use_full_grain`]), and pixels a side of the image the grain is read from.
+    /// [`::use_full_grain`]), and pixels a side of the image the grain is read from.
     pub full_grain: Option<u64>,
     pub grain_side: f32,
     /// No shape filtering: the shape image read pixel by pixel, its edges and specks hard.
@@ -339,21 +339,21 @@ impl StrokeStyle {
         self.grain.filter(|_| self.grain_mode == GrainMode::Moving).map(|g| (g, self.grain_scale, self.grain_depth))
     }
 
-    /// The grain applied to the whole stroke, fixed to the canvas (texturized).
-    fn canvas_grain(&self) -> Option<(u32, f32, f32)> {
+    /// The grain applied to the whole stroke, fixed to the  (texturized).
+    fn _grain(&self) -> Option<(u32, f32, f32)> {
         self.grain.filter(|_| self.grain_mode == GrainMode::Texturized).map(|g| (g, self.grain_scale, self.grain_depth))
     }
 }
 
-/// Where [`Canvas::render`] draws the canvas.
+/// Where [`::render`] draws the .
 pub struct Target<'a> {
     pub view: &'a wgpu::TextureView,
     pub format: wgpu::TextureFormat,
     /// Target size in pixels.
     pub size: (u32, u32),
-    /// Canvas pixels to target pixels.
+    ///  pixels to target pixels.
     pub to_screen: Affine,
-    /// Colour around the canvas, sRGB 0..1.
+    /// Colour around the , sRGB 0..1.
     pub surround: [f32; 3],
     /// Lines over that colour, if any.
     pub grid: Option<SurroundGrid>,
@@ -361,17 +361,17 @@ pub struct Target<'a> {
     pub selection: Option<SelectionLook>,
     /// Frosted panels over the target, if any.
     pub backdrop: Option<Backdrop<'a>>,
-    /// The canvas's colours to the target's colour space: a matrix in linear light (none when
+    /// The 's colours to the target's colour space: a matrix in linear light (none when
     /// they are the same space).
     pub convert: Option<[[f32; 3]; 3]>,
-    /// Or a table taking the canvas's colours to the target's (made by [`Canvas::display_lut`]),
+    /// Or a table taking the 's colours to the target's (made by [`::display_lut`]),
     /// in place of the matrix.
     pub lut: Option<&'a DisplayLut>,
-    /// Zoomed in to this many target pixels to a canvas pixel or more, each canvas pixel shows as
+    /// Zoomed in to this many target pixels to a  pixel or more, each  pixel shows as
     /// a square of its own colour; less, smoothed between them. The screen's pixels per point
     /// makes them crisp from 100%; infinity keeps them smoothed.
     pub crisp_from: f32,
-    /// The canvas shown in perceptual greys (each colour as the grey of its Rec. 709 luminance, as
+    /// The  shown in perceptual greys (each colour as the grey of its Rec. 709 luminance, as
     /// a soft proof to a grey profile shows it), to judge its values: the window's view only, never
     /// what is read or recorded from it.
     pub grey: bool,
@@ -395,7 +395,7 @@ pub struct Backdrop<'a> {
     pub sigma: f32,
 }
 
-/// Draws a scene for [`Canvas::frost_over`] into the view given (cleared first), at the size
+/// Draws a scene for [`::frost_over`] into the view given (cleared first), at the size
 /// given.
 pub type SmallScene<'s> = &'s mut dyn FnMut(&mut wgpu::CommandEncoder, &wgpu::TextureView, (u32, u32));
 
@@ -439,7 +439,7 @@ impl BackdropGpu {
     }
 }
 
-/// The glass [`Canvas::frost_ready`] worked out, `k` times smaller than the target of `size`, drawn
+/// The glass [`::frost_ready`] worked out, `k` times smaller than the target of `size`, drawn
 /// into `pass`: blurred into each region, and the small scene as it is into the windows.
 #[allow(clippy::too_many_arguments)]
 fn draw_glass(
@@ -472,7 +472,7 @@ fn draw_glass(
     }
 }
 
-/// How the selection shows over the canvas.
+/// How the selection shows over the .
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SelectionLook {
     /// Bands over what is not selected.
@@ -483,7 +483,7 @@ pub enum SelectionLook {
     Fill([f32; 3]),
 }
 
-/// Bands over the canvas outside the selection, dark and light by turns: one pair every `period`
+/// Bands over the  outside the selection, dark and light by turns: one pair every `period`
 /// target pixels (measured across), shifted `drift` pixels, at `coverage`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Stripes {
@@ -509,7 +509,7 @@ struct SelectionGpu {
     bind: wgpu::BindGroup,
 }
 
-/// Grid lines around the canvas, fixed to the target: `width` pixels wide (their edges smoothed),
+/// Grid lines around the , fixed to the target: `width` pixels wide (their edges smoothed),
 /// every `spacing` pixels across and down from one whose middle is at `origin`, none above `top`,
 /// in `color` (sRGB 0..1).
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -555,7 +555,7 @@ struct StampInstance {
     grain_turn: f32,
 }
 
-/// How much work stamp `s` is on a canvas `full`: the pixels it covers there, more for one
+/// How much work stamp `s` is on a  `full`: the pixels it covers there, more for one
 /// painted `in_place` (see [`WORK_AT_ONCE`]).
 fn stamp_work(s: &StampInstance, full: IRect, in_place: bool) -> u64 {
     let at = procraft_engine::geom::Vec2::new(s.center[0], s.center[1]);
@@ -2023,7 +2023,7 @@ impl Canvas {
         );
         let stroke_bind = quad_bind(device, &pipelines.quad_layout, [&stroke_view; 7], &grains_view, &grain_sampler);
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
-            label: Some("canvas display sampler"),
+            label: Some("linear"),
             address_mode_u: wgpu::AddressMode::ClampToEdge,
             address_mode_v: wgpu::AddressMode::ClampToEdge,
             address_mode_w: wgpu::AddressMode::ClampToEdge,
