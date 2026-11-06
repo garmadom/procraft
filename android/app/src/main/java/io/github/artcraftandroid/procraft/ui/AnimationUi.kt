@@ -141,75 +141,77 @@ private fun BarText(label: String, modifier: Modifier, onClick: () -> Unit) {
 }
 
 /**
- * The timeline of frame thumbnails: dragged, it slides through the frames; the middle one stays
- * current, so letting go stops on it.
+ * The frames in a rounded track [width] wide, the current (or played) one in the middle with a
+ * blue line under it; each frame's card is 40 tall and as wide as the canvas's shape makes it.
+ * Dragged, the track scrolls through the frames, each showing as it passes the middle; let go,
+ * it coasts and settles on a frame, which becomes the current one.
  */
 @Composable
-private fun Timeline(vm: CanvasViewModel, width: Dp, modifier: Modifier = Modifier) {
-    val a = vm.animation ?: return
-    val total = a.count
-    if (total == 0) return
-    val current = a.current
+private fun Timeline(vm: CanvasViewModel, width: Dp, modifier: Modifier) {
+    val slots = vm.frameSlots
+    val focus = vm.playingSlot ?: vm.currentSlot ?: 0
+    val (cw, ch) = vm.canvasSize()
+    val aspect = if (cw > 0 && ch > 0) (cw.toFloat() / ch).coerceIn(0.25f, 2f) else 0.66f
+    val frameWidth = FrameHeight * aspect + 1.dp
+    val pitch = frameWidth + 1.dp
+    val pitchPx = with(LocalDensity.current) { pitch.toPx() }
+    val last = (slots.size - 1).coerceAtLeast(0)
+    // the place in the middle, fractional while the track moves
+    var at by remember { mutableFloatStateOf(focus.toFloat()) }
+    var dragging by remember { mutableStateOf(false) }
+    // the frame shown last while dragging
+    var shown by remember { mutableIntStateOf(focus) }
+    var settling by remember { mutableStateOf<Job?>(null) }
     val scope = rememberCoroutineScope()
-    val density = LocalDensity.current
-    val frameWidth = FrameHeight
-    val step = with(density) { (frameWidth + 8.dp).toPx() }
-    val middleX = with(density) { (width - frameWidth) / 2f }.toPx()
-    val offset = remember { androidx.compose.animation.core.Animatable(0f) }
-    var held by remember { mutableStateOf(false) }
-    var flingJob by remember { mutableStateOf<Job?>(null) }
-    var dragOriginOffset by remember { mutableFloatStateOf(0f) }
-    var dragAccumulated by remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(current) {
-        if (!held) {
-            val target = -current * step
-            if (offset.value != target) offset.animateTo(target, Motion.standard())
+    fun scrubTo(p: Float) {
+        at = p
+        val i = p.roundToInt()
+        if (i != shown) {
+            shown = i
+            slots.getOrNull(i)?.let(vm::scrubFrame)
         }
     }
-
-    val drag = rememberDraggableState { delta ->
-        dragAccumulated += delta
-        scope.launch { offset.snapTo(dragOriginOffset + dragAccumulated) }
-        val nearest = (-(dragOriginOffset + dragAccumulated) / step).roundToInt().coerceIn(0, total - 1)
-        if (nearest != a.current) vm.chooseFrame(nearest)
+    LaunchedEffect(focus) {
+        if (dragging) return@LaunchedEffect
+        // played frames step; a frame chosen or added slides into the middle (a drag takes over)
+        if (vm.playingFrame != null) at = focus.toFloat() else animate(at, focus.toFloat(), animationSpec = Motion.frameSlide()) { v, _ -> if (!dragging) at = v }
     }
-
+    DisposableEffect(Unit) { onDispose { if (dragging) vm.endScrub(null) } }
+    val drag = rememberDraggableState { delta -> scrubTo((at - delta / pitchPx).coerceIn(0f, last.toFloat())) }
     Box(
         modifier.size(width, 44.dp).clip(RoundedCornerShape(18.dp)).background(TrackFill).border(1.dp, TrackEdge, RoundedCornerShape(18.dp))
             .draggable(
                 drag,
                 Orientation.Horizontal,
+                enabled = slots.size > 1,
                 onDragStarted = {
-                    held = true
-                    flingJob?.cancel()
-                    dragOriginOffset = offset.value
-                    dragAccumulated = 0f
+                    settling?.cancel()
+                    if (!dragging) {
+                        dragging = true
+                        shown = focus
+                        vm.beginScrub()
+                    }
                 },
                 onDragStopped = { velocity ->
-                    held = false
-                    flingJob = scope.launch {
-                        val decay = exponentialDecay<Float>(frictionMultiplier = 1.2f)
-                        val target = decay.calculateTargetValue(offset.value, velocity)
-                        val stop = (-(target) / step).roundToInt().coerceIn(0, total - 1)
-                        offset.animateTo(-stop * step, Motion.standard())
-                        vm.chooseFrame(stop)
+                    val target = exponentialDecay<Float>().calculateTargetValue(at, -velocity / pitchPx).roundToInt().coerceIn(0, last)
+                    settling = scope.launch {
+                        animate(at, target.toFloat(), -velocity / pitchPx, Motion.frameSlide()) { v, _ -> scrubTo(v.coerceIn(0f, last.toFloat())) }
+                        dragging = false
+                        vm.endScrub(target)
                     }
                 },
             ),
     ) {
-        val o = offset.value
-        for (i in 0 until total) {
-            val x = with(density) { (middleX + i * step + o).toDp() }
-            if (x >= -frameWidth && x <= width) {
+        slots.forEachIndexed { i, frame ->
+            // a frame's held places: grey cards after it
+            val held = i > 0 && slots[i - 1] == frame
+            val x = width / 2 - frameWidth / 2 + pitch * (i - at)
+            if (x > -frameWidth && x < width) {
                 Box(
                     Modifier.offset(x = x, y = 2.dp).size(frameWidth, FrameHeight).clip(RoundedCornerShape(6.dp)).background(if (held) HeldFrame else Color.White)
                         .border(1.dp, Color(0xFF9A9A9A), RoundedCornerShape(6.dp)).clickable { vm.tapFrame(i) },
                 ) {
-                    val thumb = vm.frameThumbnail(i)
-                    if (thumb != null) {
-                        Image(thumb, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-                    }
+                    if (!held) vm.animationFrames.getOrNull(frame)?.let { vm.frameThumbnails[it] }?.let { Image(it, contentDescription = "Frame ${i + 1}", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().padding(2.dp)) }
                 }
             }
         }
@@ -217,14 +219,12 @@ private fun Timeline(vm: CanvasViewModel, width: Dp, modifier: Modifier = Modifi
     Box(Modifier.offset(x = 12.dp + width / 2 - 12.dp, y = 42.dp + 44.dp + 3.dp).size(24.dp, 3.dp).clip(RoundedCornerShape(1.5.dp)).background(Pc.Accent))
 }
 
-/**
- * A popover hanging above the animation bar, with an arrow pointing down at its place on the bar.
- */
+/** A panel standing on the bar, its arrow pointing down at [arrowX] from its left edge. */
 @Composable
 private fun DownPopover(width: Dp, arrowX: Dp, modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
-    val fill = Pc.PopoverFrost
+    val fill = Pc.PopoverFill
     Box(
-        modifier.width(width).then(rememberFrost(24.dp)).padding(bottom = 2.dp).drawBehind {
+        modifier.width(width).padding(bottom = 2.dp).drawBehind {
             val arrowH = Pc.ArrowHeight.toPx()
             val tipX = arrowX.toPx()
             val outline = Path().apply {
@@ -247,162 +247,196 @@ private fun ColumnScope.AnimationSettingsPage(vm: CanvasViewModel, onColors: () 
     val a = vm.animation ?: return
     Text("Settings", color = Pc.PanelTitle, fontSize = 23.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 14.dp, top = 11.dp, bottom = 21.dp))
     Group {
-        val modes = listOf(AnimationPlayback.LOOP to "Loop", AnimationPlayback.PING_PONG to "Ping-Pong", AnimationPlayback.ONE_SHOT to "One-Shot")
-        for ((i, pair) in modes.withIndex()) {
+        for ((i, pair) in listOf(AnimationPlayback.LOOP to "Loop", AnimationPlayback.PING_PONG to "Ping-Pong", AnimationPlayback.ONE_SHOT to "One Shot").withIndex()) {
             val (mode, label) = pair
             val chosen = a.playback == mode
+            if (i > 0) RowLine()
             Row(
                 Modifier.fillMaxWidth().height(40.dp).background(if (chosen) Pc.Accent else Color.Transparent).clickable { vm.changeAnimation { it.copy(playback = mode) } }.padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(label, color = if (chosen) Color.White else Pc.Text, fontSize = 17.sp, fontWeight = if (chosen) FontWeight.Bold else FontWeight.Normal)
+                Text(label, color = if (chosen) Color.White else Pc.PanelTitle, fontSize = 17.sp, modifier = Modifier.weight(1f))
+                if (chosen) Icon(PcIcons.MenuTick, contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
             }
-            if (i < modes.size - 1) RowLine()
         }
     }
-    Spacer(Modifier.height(14.dp))
-    Group {
-        SettingSlider("Frames per second", a.fps, 1..60, format = { "$it" }) { vm.changeAnimation { it.copy(fps = it.fps) } }
-        RowLine()
-        SettingSlider("Onion skin frames", a.onionSkins, 0..MAX_ONION, format = { if (it == 0) "None" else "$it" }) { vm.changeAnimation { it.copy(onionSkins = it.onionSkins) } }
-        RowLine()
-        SettingSlider("Onion skin opacity", (a.onionOpacity * 100).roundToInt(), 0..100, format = { "$it%" }) { vm.changeAnimation { it.copy(onionOpacity = it / 100f) } }
-        RowLine()
-        Row(
-            Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onColors).padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("Onion skin colors", color = Pc.Text, fontSize = 17.sp, modifier = Modifier.weight(1f))
-            Icon(PcIcons.ChevronRight, contentDescription = null, tint = Pc.TextDim, modifier = Modifier.size(14.dp))
+    Spacer(Modifier.height(10.dp))
+    SliderGroup {
+        ValueSlider("Frames Per Second", "${a.fps}", (a.fps.toFloat() - 1f) / 59f) { v -> vm.changeAnimation { it.copy(fps = (1 + (v * 59f).roundToInt()).toUInt()) } }
+        val onion = a.onionFrames.toInt()
+        ValueSlider("Onion skin frames", when (onion) { 0 -> "None"; MAX_ONION -> "Max"; else -> "$onion" }, onion / MAX_ONION.toFloat()) { v ->
+            vm.changeAnimation { it.copy(onionFrames = (v * MAX_ONION).roundToInt().toUInt()) }
         }
+        ValueSlider("Onion skin opacity", "${(a.onionOpacity * 100).roundToInt()} %", a.onionOpacity) { v -> vm.changeAnimation { it.copy(onionOpacity = v) } }
     }
-    Spacer(Modifier.height(14.dp))
+    Spacer(Modifier.height(9.dp))
     Group {
-        ToggleRow("Blend primary frame", a.blendPrimary) { vm.changeAnimation { it.copy(blendPrimary = !it.blendPrimary) } }
+        ToggleRow("Blend primary frame", a.blendPrimary, 44.5.dp) { vm.changeAnimation { it.copy(blendPrimary = !it.blendPrimary) } }
+        RowLine()
+        Box(Modifier.fillMaxWidth().height(44.5.dp).clickable(onClick = onColors).padding(start = 16.dp), contentAlignment = Alignment.CenterStart) {
+            Text("Onion skin colors", color = Pc.PanelTitle, fontSize = 17.sp)
+        }
     }
 }
 
-/** Frame options: hold duration, duplicate, delete, foreground, background. */
-@Composable
-private fun ColumnScope.FrameOptionsPage(vm: CanvasViewModel) {
-    val a = vm.animation ?: return
-    val cur = a.current
-    Text("Frame Options", color = Pc.PanelTitle, fontSize = 23.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 14.dp, top = 11.dp, bottom = 21.dp))
-    Group {
-        val hold = a.holdFrames[cur] ?: 0
-        SettingSlider("Hold duration", hold, 0..12, format = { if (it == 0) "None" else "$it ${if (it == 1) "frame" else "frames"}" }) {
-            vm.setFrameHold(cur, it)
-        }
-    }
-    Spacer(Modifier.height(14.dp))
-    Group {
-        val isFg = a.foreground == cur
-        val isBg = a.background == cur
-        ToggleRow("Foreground", isFg) { vm.toggleForeground(cur) }
-        RowLine()
-        ToggleRow("Background", isBg) { vm.toggleBackground(cur) }
-    }
-    Spacer(Modifier.height(14.dp))
-    Group {
-        ActionRow("Duplicate", PcIcons.Duplicate) { vm.duplicateFrame(cur) }
-        RowLine()
-        ActionRow("Delete", PcIcons.Trash, destructive = true) { vm.deleteFrame(cur) }
-    }
-}
-
-/** Onion skin colors: backward and forward skin tints. */
+/**
+ * The onion skins' colours: back to the settings, "Colors" and Reset over two swatches (the frames
+ * before the current one, then those after; a tap picks which the picker below edits) and the
+ * compact picker with its mode tabs. Black leaves the skins as they are.
+ */
 @Composable
 private fun ColumnScope.OnionColorsPage(vm: CanvasViewModel, onBack: () -> Unit) {
     val a = vm.animation ?: return
     var after by remember { mutableStateOf(false) }
-    val (backRgb, forwardRgb) = a.onionBack to a.onionForward
-    Row(
-        Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onBack).padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(PcIcons.ChevronLeft, contentDescription = "Back", tint = Pc.TextDim, modifier = Modifier.size(16.dp))
-        Text("Settings", color = Pc.Text, fontSize = 17.sp)
-        Spacer(Modifier.weight(1f))
-        Text("Colors", color = Pc.PanelTitle, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.weight(1f))
-        Spacer(Modifier.width(44.dp))
+    var mode by remember { mutableStateOf(io.github.artcraftandroid.procraft.canvas.ColorMode.DISC) }
+    val rgbOf = { v: List<Float> -> v.take(3).fold(0) { acc, x -> (acc shl 8) or (x.coerceIn(0f, 1f) * 255f).roundToInt() } }
+    val unit = { rgb: Int -> listOf((rgb shr 16) and 0xFF, (rgb shr 8) and 0xFF, rgb and 0xFF).map { it / 255f } }
+    val c = remember(after) {
+        HeldColor(rgbOf(if (after) a.after else a.before), greyHue = 0f) { rgb -> vm.changeAnimation { if (after) it.copy(after = unit(rgb)) else it.copy(before = unit(rgb)) } }
     }
-    Spacer(Modifier.height(8.dp))
+    // the back button at the panel's very edge
+    Row(Modifier.offset(x = (-8).dp).fillMaxWidth().height(34.dp), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.size(44.dp, 34.dp).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
+            Icon(PcIcons.ChevronLeft, contentDescription = "Back", tint = Pc.SlideValue, modifier = Modifier.requiredSize(34.dp))
+        }
+        Text("Colors", color = Pc.PanelTitle, fontSize = 23.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(
+            "Reset", color = Pc.SlideValue, fontSize = 17.sp,
+            modifier = Modifier.clickable {
+                vm.changeAnimation { it.copy(before = listOf(0f, 0f, 0f), after = listOf(0f, 0f, 0f)) }
+                c.setRgb(0)
+            }.padding(start = 12.dp, end = 0.dp),
+        )
+    }
+    Spacer(Modifier.height(13.dp))
     Group {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (after) "Next frames" else "Previous frames", color = Pc.Text, fontSize = 17.sp, modifier = Modifier.weight(1f))
+        Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 16.dp, end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (after) "Secondary frame" else "Primary frame", color = Pc.PanelTitle, fontSize = 17.sp, modifier = Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for ((i, v) in listOf(backRgb, forwardRgb).withIndex()) {
-                    Box(
-                        Modifier.size(44.dp, 26.dp).clip(RoundedCornerShape(7.dp)).background(SwatchRim).padding(1.dp)
-                            .clip(RoundedCornerShape(6.dp)).background(Color(0xFF000000.toInt() or rgbOf(v))).clickable { after = i == 1 },
-                    )
-                }
+                Swatch(a.before, chosen = !after) { after = false }
+                Swatch(a.after, chosen = after) { after = true }
             }
+        }
+    }
+    Spacer(Modifier.height(11.dp))
+    CompactColor(vm, c, mode, { mode = it }, Modifier.height(290.dp))
+}
+
+@Composable
+private fun Swatch(rgb: List<Float>, chosen: Boolean, onClick: () -> Unit) {
+    val r = ((rgb.getOrElse(0) { 0f }) * 255f).roundToInt().coerceIn(0, 255)
+    val g = ((rgb.getOrElse(1) { 0f }) * 255f).roundToInt().coerceIn(0, 255)
+    val b = ((rgb.getOrElse(2) { 0f }) * 255f).roundToInt().coerceIn(0, 255)
+    Box(
+        Modifier.size(30.dp).clip(CircleShape).background(Color(0xFF000000.toInt() or (r shl 16) or (g shl 8) or b))
+            .border(if (chosen) 2.dp else 1.dp, if (chosen) Pc.Accent else Pc.SlideTrack, CircleShape)
+            .clickable(onClick = onClick),
+    )
+}
+
+/** The current frame's options: hold duration, duplicate, delete, foreground, background. */
+@Composable
+private fun ColumnScope.FrameOptionsPage(vm: CanvasViewModel) {
+    val a = vm.animation ?: return
+    val index = vm.currentSlot ?: return
+    val last = vm.frameSlots.size - 1
+    // re-read when the hold changes
+    val hold = vm.holdVersion.let { vm.frameHold() }
+    Text(if (a.pages) "Page options" else "Frame options", color = Pc.PanelTitle, fontSize = 23.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 14.dp, top = 11.dp, bottom = 15.dp))
+    if (!a.pages) {
+        SliderGroup(top = 4.dp) {
+            ValueSlider("Hold duration", if (hold == 0) "None" else "$hold", hold / CanvasViewModel.MAX_HOLD.toFloat(), onEnd = vm::endFrameHold) { v ->
+                vm.changeFrameHold((v * CanvasViewModel.MAX_HOLD).roundToInt())
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+    }
+    Group {
+        Row(Modifier.fillMaxWidth().height(44.dp).clickable { vm.duplicateFrame() }.padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Duplicate", color = Pc.PanelTitle, fontSize = 17.sp)
+        }
+        RowLine()
+        Row(Modifier.fillMaxWidth().height(44.dp).clickable { vm.deleteFrame() }.padding(start = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Delete", color = Pc.PanelTitle, fontSize = 17.sp)
+        }
+    }
+    // (a held place has neither)
+    val foreground = !a.pages && index == last && vm.heldPlace == 0
+    val background = index == 0 && vm.heldPlace == 0
+    if (foreground || background) {
+        Spacer(Modifier.height(10.dp))
+        Group {
+            if (foreground) ToggleRow("Foreground", a.foreground, 44.dp) { vm.changeAnimation { it.copy(foreground = !it.foreground) } }
+            if (foreground && background) RowLine()
+            if (background) ToggleRow("Background", a.background, 44.dp) { vm.changeAnimation { it.copy(background = !it.background) } }
         }
     }
 }
 
-private fun rgbOf(c: Int): Int = c and 0xFFFFFF
+@Composable
+private fun ToggleRow(label: String, on: Boolean, height: Dp, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().height(height).clickable(onClick = onClick).padding(start = 16.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = Pc.PanelTitle, fontSize = 17.sp, modifier = Modifier.weight(1f))
+        Switch(on, enabled = true)
+    }
+}
 
-private val SwatchRim = Color(0xFF6B6B6B)
-private val RowLineFill = Color(0x1FFFFFFF)
-
+/** The faint 2 pt line between a group's rows. */
+@Composable
 private fun RowLine() {
     Box(Modifier.fillMaxWidth().height(2.dp).background(RowLineFill))
 }
 
+@Composable
 private fun Group(content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Pc.ActionsGroup), content = content)
 }
 
+/** A group of sliders: [top] above the first, 11.5 between. */
 @Composable
-private fun SettingSlider(label: String, value: Int, range: IntRange, format: (Int) -> String, onChange: (Int) -> Unit) {
-    var v by remember(value) { mutableIntStateOf(value) }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, color = Pc.Text, fontSize = 17.sp, modifier = Modifier.weight(1f))
-            Text(format(v), color = Pc.TextDim, fontSize = 17.sp)
+private fun SliderGroup(top: Dp = 8.dp, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(Pc.ActionsGroup).padding(top = top),
+        verticalArrangement = Arrangement.spacedBy(11.5.dp),
+        content = content,
+    )
+}
+
+private val RowLineFill = Color(0x09FFFFFF)
+
+/** A setting's name and value over a bar dragged or tapped along. */
+@Composable
+private fun ValueSlider(label: String, value: String, fraction: Float, onEnd: () -> Unit = {}, onChange: (Float) -> Unit) {
+    val change by rememberUpdatedState(onChange)
+    val end by rememberUpdatedState(onEnd)
+    Column(Modifier.fillMaxWidth().height(55.dp).padding(horizontal = 16.dp)) {
+        Row(Modifier.fillMaxWidth().padding(top = 6.5.dp)) {
+            Text(label, color = Pc.SlideLabel, fontSize = 17.sp, modifier = Modifier.weight(1f), maxLines = 1)
+            Text(value, color = Pc.SlideValue, fontSize = 17.sp, maxLines = 1)
         }
-        androidx.compose.material3.Slider(
-            value = v.toFloat(),
-            onValueChange = { v = it.roundToInt(); onChange(v) },
-            valueRange = range.first.toFloat()..range.last.toFloat(),
-            colors = androidx.compose.material3.SliderDefaults.colors(
-                thumbColor = Color.White,
-                activeTrackColor = Pc.Accent,
-                inactiveTrackColor = Color(0xFF4C4C4C),
-            ),
+        Box(
+            Modifier.fillMaxWidth().height(22.dp)
+                .pointerInput(Unit) {
+                    detectTapGestures {
+                        change((it.x / size.width).coerceIn(0f, 1f))
+                        end()
+                    }
+                }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(onDragStart = { change((it.x / size.width).coerceIn(0f, 1f)) }, onDragEnd = { end() }, onDragCancel = { end() }) { c, _ ->
+                        c.consume()
+                        change((c.position.x / size.width).coerceIn(0f, 1f))
+                    }
+                }
+                .drawBehind {
+                    val y = size.height / 2f
+                    val h = 3.dp.toPx()
+                    val x = fraction.coerceIn(0f, 1f) * size.width
+                    drawRect(Pc.SlideTrack, Offset(0f, y - h / 2f), Size(size.width, h))
+                    drawRect(Pc.Accent, Offset(0f, y - h / 2f), Size(x, h))
+                    val knob = Size(16.dp.toPx(), 10.dp.toPx())
+                    drawRoundRect(Color.White, Offset((x - knob.width / 2f).coerceIn(0f, size.width - knob.width), y - knob.height / 2f), knob, CornerRadius(knob.height / 2f))
+                },
         )
-    }
-}
-
-@Composable
-private fun ToggleRow(label: String, checked: Boolean, onToggle: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onToggle).padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(label, color = Pc.Text, fontSize = 17.sp, modifier = Modifier.weight(1f))
-        androidx.compose.material3.Switch(
-            checked = checked,
-            onCheckedChange = { onToggle() },
-            colors = androidx.compose.material3.SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = Pc.Accent,
-            ),
-        )
-    }
-}
-
-@Composable
-private fun ActionRow(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, destructive: Boolean = false, onClick: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().height(44.dp).clickable(onClick = onClick).padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val color = if (destructive) Color(0xFFFF453A) else Pc.Text
-        Text(label, color = color, fontSize = 17.sp, modifier = Modifier.weight(1f))
-        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
     }
 }
