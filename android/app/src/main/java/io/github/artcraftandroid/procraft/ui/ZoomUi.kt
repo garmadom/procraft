@@ -66,13 +66,14 @@ fun ZoomingGallery(vm: CanvasViewModel, overlay: Boolean) {
     }
     val e = progress.value
     val at = if (z.opening) lerp(z.cell, z.canvas, e) else lerp(z.canvas, z.cell, e)
+    val galleryAlpha = if (z.opening) 1f else (e / CLOSE_REVEAL).coerceIn(0f, 1f)
     Box(Modifier.fillMaxSize()) {
         Box(
             Modifier.fillMaxSize()
-                .zoomed(z.cell, at)
+                .then(if (z.opening) Modifier.zoomed(z.cell, at) else Modifier)
                 .graphicsLayer {
                     alpha = when {
-                        !z.opening -> 1f
+                        !z.opening -> galleryAlpha
                         fadesWithZoom -> ((1f - e) / OPEN_FADE).coerceIn(0f, 1f)
                         else -> cover.value
                     }
@@ -89,14 +90,15 @@ fun ZoomingGallery(vm: CanvasViewModel, overlay: Boolean) {
                 ),
         ) { GalleryScreen(vm) }
         // closing, the canvas fades away over its cell
-        val picture = z.picture
-        if (!z.opening && picture != null) {
-            Canvas(Modifier.fillMaxSize()) {
+        if (!z.opening) {
+        Canvas(Modifier.fillMaxSize()) {
+            drawRect(Pc.CanvasSurround, alpha = (1f - e / CLOSE_REVEAL).coerceIn(0f, 1f))
+                z.picture?.let { picture ->
                 drawImage(
                     picture,
                     dstOffset = IntOffset(at.left.roundToInt(), at.top.roundToInt()),
                     dstSize = IntSize(at.width.roundToInt().coerceAtLeast(1), at.height.roundToInt().coerceAtLeast(1)),
-                    alpha = (1f - e / CLOSE_FADE).coerceIn(0f, 1f),
+                    alpha = (1f - (e - CLOSE_HOLD) / (1f - CLOSE_HOLD)).coerceIn(0f, 1f),
                 )
             }
         }
@@ -114,5 +116,11 @@ private fun Modifier.zoomed(from: Rect, to: Rect): Modifier = graphicsLayer {
 }
 
 /** How much of the opening zoom's end the gallery fades over, and how much of the closing zoom's start the canvas does. */
+/** How much of the opening zoom's end the gallery fades over. */
 private const val OPEN_FADE = 0.35f
-private const val CLOSE_FADE = 0.3f
+
+/** How much of the closing the canvas screen holds over the gallery, which comes in behind it. */
+private const val CLOSE_REVEAL = 0.4f
+
+/** How far into the closing the artwork's picture goes before it starts to fade into its cell. */
+private const val CLOSE_HOLD = 0.55f
