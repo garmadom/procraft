@@ -38,18 +38,31 @@ val LocalBackdrops = staticCompositionLocalOf<Backdrops?> { null }
 
 /**
  * The rounded bodies of the frosted panels and bars shown now, and the thin glass of the side bar's
- * tracks (window pixels), sent on whenever they change.
+ * tracks (window pixels), sent on whenever the change alters what is drawn. A panel frosted more
+ * than once (its box putting [rememberFrost] on twice) is one region: the blur behind it is worked
+ * and blended once rather than once a copy, which is what it is drawn as again over itself.
  */
 class Backdrops(private val send: (List<Float>, List<Float>) -> Unit) {
     private val regions = LinkedHashMap<Any, FloatArray>()
     private val windows = LinkedHashMap<Any, FloatArray>()
 
-    private fun sendAll() = send(regions.values.flatMap { it.asList() }, windows.values.flatMap { it.asList() })
+    /** What was last sent, to tell a change from the same regions put again. */
+    private var sent: Pair<List<Float>, List<Float>> = emptyList<Float>() to emptyList()
+
+    private fun sendAll() {
+        val all = once(regions.values)
+        val thin = once(windows.values)
+        if (all == sent.first && thin == sent.second) return
+        sent = all to thin
+        send(all, thin)
+    }
 
     fun put(key: Any, region: FloatArray, window: Boolean = false) {
         val into = if (window) windows else regions
         if (into[key]?.contentEquals(region) == true) return
-        into[key] = region
+        val replaced = into.put(key, region) != null
+        // a region already there under another key adds nothing to what is sent
+        if (!replaced && into.values.any { it !== region && it.contentEquals(region) }) return
         sendAll()
     }
 
@@ -57,6 +70,18 @@ class Backdrops(private val send: (List<Float>, List<Float>) -> Unit) {
         if (regions.remove(key) == null && windows.remove(key) == null) return
         sendAll()
     }
+}
+
+/** [all]'s regions flat (six numbers each), each one only once. */
+private fun once(all: Collection<FloatArray>): List<Float> {
+    val out = ArrayList<Float>(all.size * 6)
+    val taken = ArrayList<FloatArray>(all.size)
+    for (region in all) {
+        if (taken.any { it.contentEquals(region) }) continue
+        taken.add(region)
+        for (v in region) out.add(v)
+    }
+    return out
 }
 
 /**
