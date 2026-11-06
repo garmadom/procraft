@@ -24,6 +24,7 @@ object Pc {
     val Disabled: Color get() = pick(0x4DFFFFFF, 0x4D000000)
     val Divider: Color get() = pick(0x26FFFFFF, 0x1F000000)
     val Surround = Color(0xFF1C1C1C)
+    val CanvasSurround: Color get() = pick(0xFF252525, 0xFFCED1D2)
 
     // the bar across the top of the canvas
     /** Translucent: #333333 over white, as the bar measures. */
