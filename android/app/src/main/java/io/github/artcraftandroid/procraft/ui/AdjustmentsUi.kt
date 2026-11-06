@@ -272,12 +272,12 @@ fun HsbPanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
     if (widePanels()) {
         // side by side, 301 wide and 13 apart
         Row(
-            modifier.offset(y = (-25).dp).size(961.dp, 95.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 16.dp),
+            modifier.offset(y = (-25).dp).size(961.dp, 95.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(13.dp),
         ) { rows(Modifier.weight(1f)) }
     } else {
         Column(
-            modifier.offset(y = (-25).dp).size(532.dp, 220.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(horizontal = 26.dp, vertical = 16.dp),
+            modifier.offset(y = (-25).dp).size(532.dp, 220.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(horizontal = 26.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) { rows(Modifier.fillMaxWidth()) }
     }
@@ -340,7 +340,7 @@ fun ColorBalancePanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
     val tone = vm.balanceTone
     if (widePanels()) {
         Row(
-            modifier.offset(y = (-25).dp).size(903.dp, 95.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(start = 16.dp, top = 24.dp, bottom = 16.dp),
+            modifier.offset(y = (-25).dp).size(903.dp, 95.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(start = 16.dp, top = 24.dp, bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(19.dp),
         ) {
             BALANCE_PAIRS.forEachIndexed { k, (left, right, colours) ->
@@ -357,7 +357,7 @@ fun ColorBalancePanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
         return
     }
     Column(
-        modifier.offset(y = (-25).dp).size(532.dp, 272.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(horizontal = 26.dp, vertical = 16.dp),
+        modifier.offset(y = (-25).dp).size(532.dp, 272.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(horizontal = 26.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         BALANCE_PAIRS.forEachIndexed { k, (left, right, colours) ->
@@ -419,7 +419,7 @@ private fun BalanceRow(left: String, right: String, value: Float, track: Brush, 
 @Composable
 fun CurvesPanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
     Row(
-        modifier.offset(y = (-25).dp).size(584.dp, 183.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(16.dp),
+        modifier.offset(y = (-25).dp).size(584.dp, 183.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         val points = vm.curves[vm.curveChannel]
@@ -513,7 +513,7 @@ fun GradientMapPanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
     val editing = vm.gradientEditing
     // wider on a wide screen, showing more of the library
     val width = if (widePanels()) 835.dp else 544.dp
-    Column(modifier.offset(y = (-25).dp).size(width, 159.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(horizontal = 14.dp, vertical = 12.dp)) {
+    Column(modifier.offset(y = (-25).dp).size(width, 159.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(horizontal = 14.dp, vertical = 12.dp)) {
         Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (editing != null) "Gradient Map" else "Gradient Library", color = MenuText, fontSize = 20.sp, fontWeight = FontWeight.Bold, maxLines = 1, modifier = Modifier.weight(1f).padding(start = 14.dp))
             if (editing != null) {
@@ -844,7 +844,7 @@ private val LiquifyDim get() = if (Pc.light) Color(0xFF989898) else Color(0xFF57
 private fun LiquifyWide(vm: CanvasViewModel, modifier: Modifier) {
     val percent = { v: Float, none: String? -> if (v >= 1f) "Max" else if (v <= 0f && none != null) none else "${(v * 100).roundToInt()}%" }
     Column(
-        modifier.offset(y = (-25).dp).size(1093.dp, 162.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(start = 16.dp, end = 16.dp, top = 28.dp),
+        modifier.offset(y = (-25).dp).size(1093.dp, 162.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(start = 16.dp, end = 16.dp, top = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         val canAdjust = vm.liquified
@@ -883,7 +883,7 @@ private fun LiquifyButton(icon: androidx.compose.ui.graphics.vector.ImageVector,
 @Composable
 private fun LiquifyUpright(vm: CanvasViewModel, modifier: Modifier) {
     Column(
-        modifier.offset(y = (-25).dp).size(654.dp, 200.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(16.dp),
+        modifier.offset(y = (-25).dp).size(654.dp, 200.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         val percent = { v: Float, none: String? -> if (v >= 1f) "Max" else if (v <= 0f && none != null) none else "${(v * 100).roundToInt()}%" }
@@ -1077,7 +1077,7 @@ private val GLITCH_KINDS = listOf(
 fun GlitchPanel(vm: CanvasViewModel, modifier: Modifier = Modifier) {
     val wide = widePanels()
     Column(
-        modifier.offset(y = (-25).dp).size(if (wide) 973.dp else 640.dp, if (wide) 120.dp else 167.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(top = 8.dp),
+        modifier.offset(y = (-25).dp).size(if (wide) 973.dp else 640.dp, if (wide) 120.dp else 167.dp).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(top = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         KindsSwitch(466.dp, GLITCH_KINDS.map { (kind, label, width) -> Kind(kind.icon(), label, width) }, GLITCH_KINDS.indexOfFirst { it.first == vm.glitchKind }) {
@@ -1145,7 +1145,7 @@ internal fun KindsSwitch(width: Dp, kinds: List<Kind>, chosen: Int, onChoose: (I
 @Composable
 internal fun OptionsPanel(width: Dp, height: Dp, modifier: Modifier, top: Dp, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     Column(
-        modifier.offset(y = (-25).dp).size(width, height).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(top = top),
+        modifier.offset(y = (-25).dp).size(width, height).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).then(rememberFrost(33.dp)).clip(RoundedCornerShape(33.dp)).background(HsbPanelFill).padding(top = top),
         horizontalAlignment = Alignment.CenterHorizontally,
         content = content,
     )
@@ -1548,4 +1548,3 @@ fun QuickShapeHandles(vm: CanvasViewModel) {
         }
     }
 }
-
