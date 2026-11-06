@@ -340,7 +340,7 @@ impl StrokeStyle {
     }
 
     /// The grain applied to the whole stroke, fixed to the  (texturized).
-    fn _grain(&self) -> Option<(u32, f32, f32)> {
+   fn canvas_grain(&self) -> Option<(u32, f32, f32)> {
         self.grain.filter(|_| self.grain_mode == GrainMode::Texturized).map(|g| (g, self.grain_scale, self.grain_depth))
     }
 }
