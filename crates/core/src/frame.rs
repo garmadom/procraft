@@ -11,6 +11,11 @@ use crate::selection::SelectionDisplay;
 use crate::{
     BACKDROP_SIGMA_PT, SELECTION_FILL, SELECTION_TINT, STRIPE_COVERAGE, STRIPE_PERIOD_PT, STRIPE_SPEED_PT, State,
 };
+/// The zoom (points to a canvas pixel, 1 being 100%, the canvas at a true size) from which the
+/// canvas's pixels show as squares rather than smoothed between them: past the range detail work
+/// is done in, where on a screen of 2 or 3 pixels to a point a painted edge would otherwise show
+/// as blocks of 2 or 3 pixels (as it did from 100% before). `f32::INFINITY` smooths at every zoom.
+const CRISP_FROM_PT: f32 = 4.0;
 
 impl State {
     /// Draws the whole canvas fitted and centred on black into `view` (`format`, `size` pixels,
@@ -128,7 +133,7 @@ impl State {
                     backdrop,
                     convert,
                     lut,
-                    crisp_from: self.display_scale,
+                    crisp_from: CRISP_FROM_PT * s,
                     grey: self.grey_view,
                 }),
             );
