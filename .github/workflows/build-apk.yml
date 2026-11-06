@@ -33,15 +33,14 @@ jobs:
       - name: Install cargo-ndk
         run: cargo install cargo-ndk --version "^4" --locked
 
-      - name: Build Debug & Release APK
+      - name: Build Debug APK
         run: |
-          cd apps/procraft-android/android
+          cd android
           chmod +x gradlew
-          # assembleDebug produces an auto-signed APK you can install immediately on HyperOS
           ./gradlew assembleDebug -Pprocraft.abis=arm64-v8a
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: procraft-pad7-apk
-          path: apps/procraft-android/android/**/build/outputs/apk/**/*.apk
+          path: android/app/build/outputs/apk/**/*.apk
