@@ -89,17 +89,19 @@ fun ZoomingGallery(vm: CanvasViewModel, overlay: Boolean) {
                     },
                 ),
         ) { GalleryScreen(vm) }
-        // closing, the canvas fades away over its cell
+        // closing, the canvas screen as it was (its bars aside) goes over it: the surround around
+        // the artwork, and the artwork over its place, shrinking to its cell as it fades
         if (!z.opening) {
-        Canvas(Modifier.fillMaxSize()) {
-            drawRect(Pc.CanvasSurround, alpha = (1f - e / CLOSE_REVEAL).coerceIn(0f, 1f))
+            Canvas(Modifier.fillMaxSize()) {
+                drawRect(Pc.CanvasSurround, alpha = (1f - e / CLOSE_REVEAL).coerceIn(0f, 1f))
                 z.picture?.let { picture ->
-                drawImage(
-                    picture,
-                    dstOffset = IntOffset(at.left.roundToInt(), at.top.roundToInt()),
-                    dstSize = IntSize(at.width.roundToInt().coerceAtLeast(1), at.height.roundToInt().coerceAtLeast(1)),
-                    alpha = (1f - (e - CLOSE_HOLD) / (1f - CLOSE_HOLD)).coerceIn(0f, 1f),
-                )
+                    drawImage(
+                        picture,
+                        dstOffset = IntOffset(at.left.roundToInt(), at.top.roundToInt()),
+                        dstSize = IntSize(at.width.roundToInt().coerceAtLeast(1), at.height.roundToInt().coerceAtLeast(1)),
+                        alpha = (1f - (e - CLOSE_HOLD) / (1f - CLOSE_HOLD)).coerceIn(0f, 1f),
+                    )
+                }
             }
         }
     }
