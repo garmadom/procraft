@@ -1,31 +1,47 @@
 name: Build Android APK
-on: [workflow_dispatch, push]
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
-      - uses: actions/setup-java@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK 29.0.14206865
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;29.0.14206865"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
+          echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
 
       - name: Install cargo-ndk
-        run: cargo install cargo-ndk --locked
+        run: cargo install cargo-ndk --version "^4" --locked
 
-      - name: Build Release APK
+      - name: Build Debug & Release APK
         run: |
           cd apps/procraft-android/android
           chmod +x gradlew
-          ./gradlew assembleRelease -Pprocraft.abis=arm64-v8a
+          # assembleDebug produces an auto-signed APK you can install immediately on HyperOS
+          ./gradlew assembleDebug -Pprocraft.abis=arm64-v8a
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: procraft-pad7-release
-          path: apps/procraft-android/android/app/build/outputs/apk/release/*.apk
+          name: procraft-pad7-apk
+          path: apps/procraft-android/android/**/build/outputs/apk/**/*.apk
