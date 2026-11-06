@@ -106,8 +106,8 @@ private val ToolbarBottom = 25.dp
 private val ToolbarCorner = 33.dp
 // translucent: #282828 to #252525 over white, #212121 to #1e1e1e over the surround; light, #f2f2f2
 // with a white track, dark labels, and grey ones for what can't be used yet
-private val ToolbarTop get() = if (Pc.light) Color(0xF7F2F2F2) else Color(0xF7212121)
-private val ToolbarFill get() = if (Pc.light) Color(0xF7F2F2F2) else Color(0xF71E1E1E)
+private val ToolbarTop get() = if (Pc.light) Color(0xD8F2F2F2) else Color(0xD8212121)
+private val ToolbarFill get() = if (Pc.light) Color(0xD8F2F2F2) else Color(0xD81E1E1E)
 private val SegmentTrack get() = if (Pc.light) Color(0xFFFFFFFF) else Color(0xFF535353)
 private val SegmentEdge get() = if (Pc.light) Color(0xFFEBEBEB) else Color(0xFF7E7E7E)
 private val SegmentText get() = if (Pc.light) Color(0xFF3B3B3B) else Color(0xFFC1C1C1)
@@ -317,6 +317,7 @@ internal fun FloatingToolbar(
 ) {
     Column(
         modifier.offset(y = -ToolbarBottom).size(layout.width, ToolbarHeight)
+            .then(rememberFrost(ToolbarCorner))
             .clip(RoundedCornerShape(ToolbarCorner))
             .background(Brush.verticalGradient(0f to ToolbarTop, 0.12f to ToolbarFill))
             .tap(onBackground)
