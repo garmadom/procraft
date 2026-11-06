@@ -2,6 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- High-DPI and tablet screen scaling support for Xiaomi Pad 7 -->
+    <supports-screens
+        android:smallScreens="true"
+        android:normalScreens="true"
+        android:largeScreens="true"
+        android:xlargeScreens="true"
+        android:anyDensity="true"
+        android:resizeable="true" />
+
     <application
         android:allowBackup="false"
         android:enableOnBackInvokedCallback="true"
@@ -10,6 +19,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
+        android:hardwareAccelerated="true"
         android:theme="@style/Theme.ProCraft">
 
         <!-- configuration changes are handled in place: the canvas and its GPU state stay -->
@@ -18,7 +28,14 @@
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|uiMode|density"
             android:exported="true"
             android:launchMode="singleTask"
+            android:hardwareAccelerated="true"
+            android:resizeableActivity="true"
             android:windowSoftInputMode="adjustNothing">
+
+            <!-- Allows HyperOS 3:2 aspect ratio without downscaling or letterbox blur -->
+            <meta-data android:name="android.max_aspect" android:value="2.5" />
+            <meta-data android:name="android.supports_size_changes" android:value="true" />
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
